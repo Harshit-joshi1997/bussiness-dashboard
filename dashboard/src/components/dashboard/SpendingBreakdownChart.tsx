@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { useStore } from '../../store/useStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -15,7 +15,7 @@ export default function SpendingBreakdownChart() {
       acc[current.category] = (acc[current.category] || 0) + current.amount;
       return acc;
     }, {} as Record<string, number>);
-    
+
     return Object.entries(categories)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
@@ -40,7 +40,7 @@ export default function SpendingBreakdownChart() {
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip 
+            <Tooltip
               formatter={(value) => `$${Number(value).toLocaleString()}`}
               contentStyle={{
                 backgroundColor: theme === 'dark' ? '#18181b' : '#ffffff',
