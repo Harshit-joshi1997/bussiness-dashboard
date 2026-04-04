@@ -1,4 +1,3 @@
-import React from 'react';
 import { useStore } from '../../store/useStore';
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import { cn } from '../../utils/cn';

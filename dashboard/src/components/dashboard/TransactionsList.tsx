@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useStore } from '../../store/useStore';
 import { Search, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '../../utils/cn';

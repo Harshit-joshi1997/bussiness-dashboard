@@ -12,8 +12,11 @@ export interface Transaction {
 }
 
 interface User {
+  name?: string;
   email: string;
   password: string;
+  role?: string;
+  phone?: string;
 }
 
 interface AppState {
@@ -56,7 +59,7 @@ export const useStore = create<AppState>()(
         login: (email, password) => {
           const state = get();
           if (state.user?.email === email && state.user?.password === password) {
-            set({ isAuthenticated: true, user: { email, password } });
+            set({ isAuthenticated: true, user: { ...state.user, email, password, } });
             return true;
           }
           return false;

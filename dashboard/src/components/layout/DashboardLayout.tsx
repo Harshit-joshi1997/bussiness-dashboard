@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Receipt, PieChart, Settings, LogOut, Sun, Moon, Menu, X, Wallet } from 'lucide-react';
+import { LayoutDashboard, Receipt, PieChart, Settings, LogOut, Sun, Moon, Menu, Wallet } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { useThemeStore } from '../../store/themeStore';
 import { cn } from '../../utils/cn';
+
+const getInitials = (name?: string) => {
+  if (!name) return 'U';
+  const parts = name.trim().split(' ').filter(p => p);
+  if (parts.length >= 2) {
+    return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+  }
+  return name.charAt(0).toUpperCase();
+};
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,7 +36,7 @@ export default function DashboardLayout() {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 flex overflow-hidden transition-colors">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
@@ -58,8 +67,8 @@ export default function DashboardLayout() {
                 className={({ isActive }) =>
                   cn(
                     "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium",
-                    isActive 
-                      ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" 
+                    isActive
+                      ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
                       : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   )
                 }
@@ -105,7 +114,7 @@ export default function DashboardLayout() {
             </button>
             <div className="flex items-center gap-3 pl-4 border-l border-zinc-200 dark:border-zinc-800">
               <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
+                {getInitials(user?.name)}
               </div>
               <span className="hidden md:block font-medium dark:text-zinc-300">{user?.name}</span>
             </div>

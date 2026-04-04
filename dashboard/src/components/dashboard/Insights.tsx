@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useStore } from '../../store/useStore';
 import { Lightbulb, AlertCircle, ArrowUpRight } from 'lucide-react';
 
@@ -8,13 +8,13 @@ export default function Insights() {
   const insights = useMemo(() => {
     const expenses = transactions.filter(t => t.type === 'expense');
     const income = transactions.filter(t => t.type === 'income');
-    
+
     // Group by category for expenses
     const categories = expenses.reduce((acc, current) => {
       acc[current.category] = (acc[current.category] || 0) + current.amount;
       return acc;
     }, {} as Record<string, number>);
-    
+
     const sortedCategories = Object.entries(categories).sort((a, b) => b[1] - a[1]);
     const highestCategory = sortedCategories.length > 0 ? sortedCategories[0] : null;
 
@@ -22,7 +22,7 @@ export default function Insights() {
       {
         id: 1,
         title: 'Top Expense Category',
-        desc: highestCategory 
+        desc: highestCategory
           ? `You spent $${highestCategory[1]} on ${highestCategory[0]} this period.`
           : 'Not enough data to calculate top expense.',
         icon: AlertCircle,
@@ -31,7 +31,7 @@ export default function Insights() {
       {
         id: 2,
         title: 'Monthly Insight',
-        desc: income.length > expenses.length 
+        desc: income.length > expenses.length
           ? 'Great job! You have more income transactions than expenses.'
           : 'Watch out! You have frequent expense transactions.',
         icon: Lightbulb,

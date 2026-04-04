@@ -17,7 +17,7 @@ export default function Register() {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim() && email.trim() && password.trim()) {
-      register({ email, password });
+      register({ name: name.trim(), email, password, role, phone });
       navigate('/login');
     }
   };
