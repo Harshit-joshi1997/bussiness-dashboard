@@ -5,15 +5,19 @@ import { useStore } from '../store/useStore';
 import { Wallet, ArrowRight } from 'lucide-react';
 
 export default function Login() {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const login = useStore((state) => state.login);
   const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && email.trim()) {
-      login(name, email);
+    if (email.trim() && password.trim()) {
+      // Create a mock name from the email
+      const mockedName = email.split('@')[0].replace(/[^a-zA-Z]/g, ' ') || 'User';
+      const formattedName = mockedName.charAt(0).toUpperCase() + mockedName.slice(1);
+      
+      login(formattedName, email);
       navigate('/dashboard');
     }
   };
@@ -87,20 +91,6 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-2">
-                Full Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                placeholder="John Doe"
-              />
-            </div>
-            <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2">
                 Email Address
               </label>
@@ -112,6 +102,20 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                 placeholder="you@example.com"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                placeholder="••••••••"
               />
             </div>
 
