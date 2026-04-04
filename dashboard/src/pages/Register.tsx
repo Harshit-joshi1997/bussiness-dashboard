@@ -10,15 +10,15 @@ export default function Register() {
   const [role, setRole] = useState('Staff');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-  
-  const login = useStore((state) => state.login);
+
+  const register = useStore((state) => state.register);
   const navigate = useNavigate();
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && email.trim()) {
-      login(name, email); // auto login for demo purposes
-      navigate('/dashboard');
+    if (name.trim() && email.trim() && password.trim()) {
+      register({ email, password });
+      navigate('/login');
     }
   };
 
@@ -85,7 +85,7 @@ export default function Register() {
             </div>
             <h1 className="text-3xl font-bold">Zorvyn</h1>
           </div>
-          
+
           <h2 className="text-3xl font-semibold mb-2">Create Account</h2>
           <p className="text-zinc-500 dark:text-zinc-400 mb-8">Enter your details to register.</p>
 
