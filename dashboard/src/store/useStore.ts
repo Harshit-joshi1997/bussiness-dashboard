@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
 
 export type TransactionType = 'income' | 'expense';
 
@@ -19,7 +20,7 @@ interface AppState {
   isAuthenticated: boolean;
   user: User | null;
   transactions: Transaction[];
-  login: (email: string, password: string) => void;
+  login: (email: string, password: string) => boolean;
   register: (user: User) => void;
   logout: () => void;
   addTransaction: (t: Omit<Transaction, 'id'>) => void;
@@ -38,51 +39,61 @@ const initialTransactions: Transaction[] = [
   { id: '7', date: '2026-03-29', amount: 50, category: 'Subscriptions', type: 'expense' },
 ];
 
-export const useStore = create<AppState>((set, get) => ({
-  isAuthenticated: false,
-  user: null,
-  transactions: initialTransactions,
+export const useStore = create<AppState>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        isAuthenticated: false,
+        user: null,
+        transactions: initialTransactions,
 
-  register: (User: User) =>
-    set({
-      user: User,
-      isAuthenticated: false,
-    }),
+        register: (user: User) =>
+          set({
+            user,
+            isAuthenticated: false,
+          }),
 
+        login: (email, password) => {
+          const state = get();
+          if (state.user?.email === email && state.user?.password === password) {
+            set({ isAuthenticated: true, user: { email, password } });
+            return true;
+          }
+          return false;
+        },
 
+        logout: () => set({ isAuthenticated: false, user: null }),
 
-  login: (email, password) => set((state) => {
-    if (state.user?.email === email && state.user?.password === password) {
-      return { isAuthenticated: true, user: { email, password } };
-    }
-    return state;
-  }),
-  logout: () => set({ isAuthenticated: false, user: null }),
+        addTransaction: (t) =>
+          set((state) => ({
+            transactions: [{ ...t, id: Math.random().toString(36).substring(7) }, ...state.transactions],
+          })),
 
-  addTransaction: (t) =>
-    set((state) => ({
-      transactions: [{ ...t, id: Math.random().toString(36).substring(7) }, ...state.transactions],
-    })),
+        deleteTransaction: (id) =>
+          set((state) => ({
+            transactions: state.transactions.filter((t) => t.id !== id),
+          })),
 
-  deleteTransaction: (id) =>
-    set((state) => ({
-      transactions: state.transactions.filter((t) => t.id !== id),
-    })),
+        getSummary: () => {
+          const { transactions } = get();
+          let totalIncome = 0;
+          let totalExpenses = 0;
 
-  getSummary: () => {
-    const { transactions } = get();
-    let totalIncome = 0;
-    let totalExpenses = 0;
+          transactions.forEach((t) => {
+            if (t.type === 'income') totalIncome += t.amount;
+            else totalExpenses += t.amount;
+          });
 
-    transactions.forEach((t) => {
-      if (t.type === 'income') totalIncome += t.amount;
-      else totalExpenses += t.amount;
-    });
-
-    return {
-      totalIncome,
-      totalExpenses,
-      totalBalance: totalIncome - totalExpenses,
-    };
-  },
-}));
+          return {
+            totalIncome,
+            totalExpenses,
+            totalBalance: totalIncome - totalExpenses,
+          };
+        },
+      }),
+      {
+        name: 'zorvyn-storage',
+      }
+    )
+  )
+);

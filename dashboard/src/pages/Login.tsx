@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Wallet, ArrowRight } from 'lucide-react';
@@ -7,18 +7,20 @@ import { Wallet, ArrowRight } from 'lucide-react';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const login = useStore((state) => state.login);
   const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (email.trim() && password.trim()) {
-      // Create a mock name from the email
-      const mockedName = email.split('@')[0].replace(/[^a-zA-Z]/g, ' ') || 'User';
-      const formattedName = mockedName.charAt(0).toUpperCase() + mockedName.slice(1);
-      
-      login(formattedName, email);
-      navigate('/dashboard');
+      const success = login(email, password);
+      if (success) {
+        navigate('/dashboard');
+      } else {
+        setError('Email or password is incorrect');
+      }
     }
   };
 
@@ -85,9 +87,22 @@ export default function Login() {
             </div>
             <h1 className="text-3xl font-bold">Zorvyn</h1>
           </div>
-          
+
           <h2 className="text-3xl font-semibold mb-2">Welcome Back</h2>
           <p className="text-zinc-500 dark:text-zinc-400 mb-8">Enter your details to access your dashboard.</p>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-lg text-red-600 dark:text-red-400 text-sm font-medium text-center"
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
@@ -125,10 +140,10 @@ export default function Login() {
               type="submit"
               className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
             >
-              Access Dashboard
+              Submit
               <ArrowRight size={20} />
             </motion.button>
-            
+
             <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-6">
               Don't have an account?{' '}
               <Link to="/register" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
