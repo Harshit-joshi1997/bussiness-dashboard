@@ -5,12 +5,18 @@ import { useThemeStore } from '../../store/themeStore';
 
 export default function BalanceTrendChart() {
   const transactions = useStore((state) => state.transactions);
+  const user = useStore((state) => state.user);
   const theme = useThemeStore((state) => state.theme);
 
   const data = useMemo(() => {
+    // Filter for staff
+    const relevantTransactions = user?.role === 'staff' 
+      ? transactions.filter(t => t.createdBy === user.email) 
+      : transactions;
+
     // Generate simple cumulative data or group by date
     // Sort transactions by date ascending
-    const sorted = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sorted = [...relevantTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     let balance = 0;
     return sorted.map(t => {
       balance += t.type === 'income' ? t.amount : -t.amount;

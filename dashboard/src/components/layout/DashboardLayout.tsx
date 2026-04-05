@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Receipt, PieChart, Settings, LogOut, Sun, Moon, Menu, Wallet } from 'lucide-react';
+import { LayoutDashboard, Receipt, PieChart, Settings, LogOut, Sun, Moon, Menu, Wallet, Users } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { useThemeStore } from '../../store/themeStore';
 import { cn } from '../../utils/cn';
@@ -29,8 +29,12 @@ export default function DashboardLayout() {
     { name: 'Overview', to: '/dashboard', icon: LayoutDashboard },
     { name: 'Transactions', to: '/dashboard/transactions', icon: Receipt },
     { name: 'Budgets', to: '/dashboard/budgets', icon: PieChart },
-    { name: 'Settings', to: '/dashboard/settings', icon: Settings },
   ];
+
+  if (user?.role === 'admin') {
+    navLinks.push({ name: 'Team', to: '/dashboard/team', icon: Users });
+    navLinks.push({ name: 'Settings', to: '/dashboard/settings', icon: Settings });
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 flex overflow-hidden transition-colors">

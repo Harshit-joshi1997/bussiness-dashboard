@@ -1,16 +1,22 @@
 import { useState, useMemo } from 'react';
 import { useStore } from '../../store/useStore';
-import { Search, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 export default function TransactionsList() {
   const transactions = useStore((state) => state.transactions);
+  const user = useStore((state) => state.user);
+  const deleteTransaction = useStore((state) => state.deleteTransaction);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   const filteredAndSortedData = useMemo(() => {
-    let data = [...transactions];
+    const relevantTransactions = user?.role === 'staff' 
+      ? transactions.filter(t => t.createdBy === user.email) 
+      : transactions;
+
+    let data = [...relevantTransactions];
 
     if (filterType !== 'all') {
       data = data.filter(t => t.type === filterType);
@@ -30,7 +36,7 @@ export default function TransactionsList() {
     });
 
     return data;
-  }, [transactions, searchTerm, filterType, sortOrder]);
+  }, [transactions, searchTerm, filterType, sortOrder, user]);
 
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
@@ -80,6 +86,7 @@ export default function TransactionsList() {
                 <th className="pb-3 font-medium">Category</th>
                 <th className="pb-3 font-medium">Type</th>
                 <th className="pb-3 font-medium text-right">Amount</th>
+                {user?.role === 'admin' && <th className="pb-3 font-medium text-right w-16"></th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -104,6 +111,17 @@ export default function TransactionsList() {
                   )}>
                     {t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()}
                   </td>
+                  {user?.role === 'admin' && (
+                    <td className="py-4 text-right">
+                      <button 
+                        onClick={() => deleteTransaction(t.id)}
+                        className="p-1.5 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                        title="Delete Transaction"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

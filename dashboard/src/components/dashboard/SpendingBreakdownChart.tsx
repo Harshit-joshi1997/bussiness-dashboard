@@ -7,10 +7,16 @@ const COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6'];
 
 export default function SpendingBreakdownChart() {
   const transactions = useStore((state) => state.transactions);
+  const user = useStore((state) => state.user);
   const theme = useThemeStore((state) => state.theme);
 
   const data = useMemo(() => {
-    const expenses = transactions.filter(t => t.type === 'expense');
+    // Filter for staff
+    const relevantTransactions = user?.role === 'staff' 
+      ? transactions.filter(t => t.createdBy === user.email) 
+      : transactions;
+
+    const expenses = relevantTransactions.filter(t => t.type === 'expense');
     const categories = expenses.reduce((acc, current) => {
       acc[current.category] = (acc[current.category] || 0) + current.amount;
       return acc;

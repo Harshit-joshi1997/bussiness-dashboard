@@ -9,37 +9,43 @@ export interface Transaction {
   amount: number;
   category: string;
   type: TransactionType;
+  createdBy?: string; // Used to track which staff member created the transaction
 }
 
-interface User {
+export interface User {
   name?: string;
   email: string;
   password: string;
-  role?: string;
+  role?: 'admin' | 'staff';
   phone?: string;
 }
 
 interface AppState {
   isAuthenticated: boolean;
   user: User | null;
+  employees: User[];
   transactions: Transaction[];
   login: (email: string, password: string) => boolean;
   register: (user: User) => void;
   logout: () => void;
+  // Data actions
   addTransaction: (t: Omit<Transaction, 'id'>) => void;
   deleteTransaction: (id: string) => void;
-  getSummary: () => { totalBalance: number; totalIncome: number; totalExpenses: number };
+  getSummary: (filterByEmail?: string) => { totalBalance: number; totalIncome: number; totalExpenses: number };
+  // Admin actions
+  addEmployee: (user: User) => void;
+  removeEmployee: (email: string) => void;
+  updateEmployeeRole: (email: string, role: 'admin' | 'staff') => void;
+  updateEmployee: (email: string, data: Partial<User>) => void;
+  hardReset: () => void;
 }
 
 // Initial mock data
 const initialTransactions: Transaction[] = [
-  { id: '1', date: '2026-04-01', amount: 5000, category: 'Salary', type: 'income' },
-  { id: '2', date: '2026-04-02', amount: 1500, category: 'Freelance', type: 'income' },
-  { id: '3', date: '2026-04-02', amount: 120, category: 'Groceries', type: 'expense' },
-  { id: '4', date: '2026-04-03', amount: 60, category: 'Transport', type: 'expense' },
-  { id: '5', date: '2026-04-04', amount: 200, category: 'Utilities', type: 'expense' },
-  { id: '6', date: '2026-03-28', amount: 300, category: 'Dining', type: 'expense' },
-  { id: '7', date: '2026-03-29', amount: 50, category: 'Subscriptions', type: 'expense' },
+  { id: '1', date: '2026-04-01', amount: 5000, category: 'Salary', type: 'income', createdBy: 'admin@zorvyn.com' },
+  { id: '2', date: '2026-04-02', amount: 1500, category: 'Freelance', type: 'income', createdBy: 'admin@zorvyn.com' },
+  { id: '3', date: '2026-04-02', amount: 120, category: 'Groceries', type: 'expense', createdBy: 'admin@zorvyn.com' },
+  { id: '4', date: '2026-04-03', amount: 60, category: 'Transport', type: 'expense', createdBy: 'admin@zorvyn.com' },
 ];
 
 export const useStore = create<AppState>()(
@@ -48,18 +54,39 @@ export const useStore = create<AppState>()(
       (set, get) => ({
         isAuthenticated: false,
         user: null,
+        employees: [
+          // Create a default admin account
+          { name: 'Admin User', email: 'admin@zorvyn.com', password: 'password', role: 'admin' }
+        ],
         transactions: initialTransactions,
 
         register: (user: User) =>
-          set({
-            user,
-            isAuthenticated: false,
+          set((state) => {
+            const currentEmployees = state.employees || [];
+            const isFirstUser = currentEmployees.length === 0;
+            const role = user.role || (isFirstUser ? 'admin' : 'staff');
+            const newUser = { ...user, role };
+            return {
+              employees: [...currentEmployees, newUser],
+              user: newUser,
+              isAuthenticated: false,
+            };
           }),
 
         login: (email, password) => {
           const state = get();
-          if (state.user?.email === email && state.user?.password === password) {
-            set({ isAuthenticated: true, user: { ...state.user, email, password, } });
+          const currentEmployees = state.employees || [];
+          const foundUser = currentEmployees.find(u => u.email === email && u.password === password);
+          // Fallback to match if they just registered and their state.user is the only reference
+          const legacyMatch = state.user?.email === email && state.user?.password === password;
+
+          if (foundUser) {
+            set({ isAuthenticated: true, user: foundUser });
+            return true;
+          } else if (legacyMatch && state.user) {
+            // Migrate user to employees
+            const newUser = { ...state.user, role: state.user.role || 'staff' };
+            set({ isAuthenticated: true, user: newUser, employees: [...currentEmployees, newUser] });
             return true;
           }
           return false;
@@ -77,12 +104,13 @@ export const useStore = create<AppState>()(
             transactions: state.transactions.filter((t) => t.id !== id),
           })),
 
-        getSummary: () => {
+        getSummary: (filterByEmail?: string) => {
           const { transactions } = get();
           let totalIncome = 0;
           let totalExpenses = 0;
 
           transactions.forEach((t) => {
+            if (filterByEmail && t.createdBy !== filterByEmail) return;
             if (t.type === 'income') totalIncome += t.amount;
             else totalExpenses += t.amount;
           });
@@ -93,9 +121,32 @@ export const useStore = create<AppState>()(
             totalBalance: totalIncome - totalExpenses,
           };
         },
+
+        addEmployee: (newUser) =>
+          set((state) => ({ employees: [...state.employees, newUser] })),
+
+        removeEmployee: (email) =>
+          set((state) => ({ employees: state.employees.filter((u) => u.email !== email) })),
+
+        updateEmployeeRole: (email, role) =>
+          set((state) => ({
+            employees: state.employees.map((u) => (u.email === email ? { ...u, role } : u)),
+            // If the updated user is currenlty logged in, update their local cache
+            user: state.user?.email === email ? { ...state.user, role } : state.user,
+          })),
+
+        updateEmployee: (email, data) =>
+          set((state) => ({
+            employees: state.employees.map((u) => (u.email === email ? { ...u, ...data } : u)),
+            user: state.user?.email === email ? { ...state.user, ...data } : state.user,
+          })),
+
+        hardReset: () =>
+          set({ transactions: [] }),
+
       }),
       {
-        name: 'zorvyn-storage',
+        name: 'dashboard-storage',
       }
     )
   )

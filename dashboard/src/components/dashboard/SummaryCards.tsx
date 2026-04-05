@@ -3,8 +3,9 @@ import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 export default function SummaryCards() {
+  const user = useStore((state) => state.user);
   const getSummary = useStore((state) => state.getSummary);
-  const { totalBalance, totalIncome, totalExpenses } = getSummary();
+  const { totalBalance, totalIncome, totalExpenses } = getSummary(user?.role === 'staff' ? user.email : undefined);
 
   const cards = [
     {

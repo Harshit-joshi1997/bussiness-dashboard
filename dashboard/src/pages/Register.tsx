@@ -7,7 +7,8 @@ import { Wallet, ArrowRight } from 'lucide-react';
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('Staff');
+  const [role, setRole] = useState<'admin' | 'staff'>('staff');
+
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
 
@@ -17,7 +18,7 @@ export default function Register() {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim() && email.trim() && password.trim()) {
-      register({ name: name.trim(), email, password, role, phone });
+      register({ name: name.trim(), email, password, phone, role });
       navigate('/login');
     }
   };
@@ -120,11 +121,11 @@ export default function Register() {
                 <select
                   id="role"
                   value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  onChange={(e) => setRole(e.target.value as 'admin' | 'staff')}
                   className="w-full px-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                 >
-                  <option value="Staff">Staff</option>
-                  <option value="Admin">Admin</option>
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
                 </select>
               </div>
               <div>
