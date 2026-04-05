@@ -5,11 +5,19 @@ import { cn } from '../../utils/cn';
 
 export default function TransactionsList() {
   const transactions = useStore((state) => state.transactions);
+  const employees = useStore((state) => state.employees);
   const user = useStore((state) => state.user);
   const deleteTransaction = useStore((state) => state.deleteTransaction);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+
+  // Helper: resolve employee name from email
+  const getEmployeeName = (email?: string) => {
+    if (!email) return '—';
+    const found = employees.find(e => e.email === email);
+    return found?.name || email;
+  };
 
   const filteredAndSortedData = useMemo(() => {
     const relevantTransactions = user?.role === 'staff' 
@@ -83,6 +91,7 @@ export default function TransactionsList() {
             <thead className="text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800">
               <tr>
                 <th className="pb-3 font-medium">Date</th>
+                <th className="pb-3 font-medium">Employee</th>
                 <th className="pb-3 font-medium">Category</th>
                 <th className="pb-3 font-medium">Type</th>
                 <th className="pb-3 font-medium text-right">Amount</th>
@@ -94,6 +103,14 @@ export default function TransactionsList() {
                 <tr key={t.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                   <td className="py-4 text-zinc-900 dark:text-zinc-300">
                     {new Date(t.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </td>
+                  <td className="py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xs font-bold shrink-0">
+                        {getEmployeeName(t.createdBy).charAt(0).toUpperCase()}
+                      </div>
+                      <span className="font-medium dark:text-zinc-100">{getEmployeeName(t.createdBy)}</span>
+                    </div>
                   </td>
                   <td className="py-4 font-medium dark:text-zinc-100">{t.category}</td>
                   <td className="py-4">

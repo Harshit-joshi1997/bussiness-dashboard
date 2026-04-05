@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import DashboardLayout from './components/layout/DashboardLayout';
 import TeamDirectory from './pages/TeamDirectory';
 import Settings from './pages/Settings';
+import Transactions from './pages/Transactions';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useStore((state) => state.isAuthenticated);
@@ -35,6 +36,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/transactions" element={<Transactions />} />
           <Route path="/dashboard/team" element={<TeamDirectory />} />
           <Route path="/dashboard/settings" element={<Settings />} />
         </Route>
