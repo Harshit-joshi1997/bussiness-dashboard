@@ -9,6 +9,13 @@ export default function Insights() {
     const expenses = transactions.filter(t => t.type === 'expense');
     const income = transactions.filter(t => t.type === 'income');
 
+    const totalIncome = income.reduce((sum, t) => sum + t.amount, 0);
+    const totalExpenses = expenses.reduce((sum, t) => sum + t.amount, 0);
+    const savingsRate = totalIncome > 0
+      ? (((totalIncome - totalExpenses) / totalIncome) * 100).toFixed(1)
+      : '0.0';
+    const isNegative = totalExpenses > totalIncome;
+
     // Group by category for expenses
     const categories = expenses.reduce((acc, current) => {
       acc[current.category] = (acc[current.category] || 0) + current.amount;
@@ -23,19 +30,28 @@ export default function Insights() {
         id: 1,
         title: 'Top Expense Category',
         desc: highestCategory
-          ? `You spent $${highestCategory[1]} on ${highestCategory[0]} this period.`
-          : 'Not enough data to calculate top expense.',
+          ? `You spent $${highestCategory[1].toLocaleString()} on ${highestCategory[0]} this period.`
+          : 'No expense data available yet.',
         icon: AlertCircle,
         color: 'text-amber-500'
       },
       {
         id: 2,
         title: 'Monthly Insight',
-        desc: income.length > expenses.length
-          ? 'Great job! You have more income transactions than expenses.'
-          : 'Watch out! You have frequent expense transactions.',
+        desc: isNegative
+          ? `Your expenses ($${totalExpenses.toLocaleString()}) exceed your income ($${totalIncome.toLocaleString()}) by $${(totalExpenses - totalIncome).toLocaleString()}. Consider reducing spending.`
+          : `You're in the green! Income exceeds expenses by $${(totalIncome - totalExpenses).toLocaleString()}.`,
         icon: Lightbulb,
-        color: 'text-indigo-500'
+        color: isNegative ? 'text-red-500' : 'text-indigo-500'
+      },
+      {
+        id: 3,
+        title: 'Savings Rate',
+        desc: isNegative
+          ? `Savings rate is ${savingsRate}%. You are spending more than you earn this period.`
+          : `You are saving ${savingsRate}% of your income this period. Keep it up!`,
+        icon: ArrowUpRight,
+        color: isNegative ? 'text-red-500' : 'text-emerald-500'
       }
     ];
   }, [transactions]);
