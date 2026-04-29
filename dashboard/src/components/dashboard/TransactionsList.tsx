@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../../store/useStore';
 import { Search, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { cn } from '../../utils/cn';
@@ -11,6 +11,13 @@ export default function TransactionsList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterType, sortOrder]);
 
   // Helper: resolve employee name from email
   const getEmployeeName = (email?: string) => {
@@ -20,8 +27,8 @@ export default function TransactionsList() {
   };
 
   const filteredAndSortedData = useMemo(() => {
-    const relevantTransactions = user?.role === 'staff' 
-      ? transactions.filter(t => t.createdBy === user.email) 
+    const relevantTransactions = user?.role === 'staff'
+      ? transactions.filter(t => t.createdBy === user.email)
       : transactions;
 
     let data = [...relevantTransactions];
@@ -31,8 +38,8 @@ export default function TransactionsList() {
     }
 
     if (searchTerm) {
-      data = data.filter(t => 
-        t.category.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      data = data.filter(t =>
+        t.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.amount.toString().includes(searchTerm)
       );
     }
@@ -46,23 +53,31 @@ export default function TransactionsList() {
     return data;
   }, [transactions, searchTerm, filterType, sortOrder, user]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedData.length / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedData = filteredAndSortedData.slice(
+    (safeCurrentPage - 1) * itemsPerPage,
+    safeCurrentPage * itemsPerPage
+  );
+
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <h3 className="text-xl font-semibold dark:text-zinc-50">Transactions</h3>
-        
+
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search by category or amount..." 
+            <input
+              type="text"
+              placeholder="Search by category or amount..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
-          <select 
+          <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as any)}
             className="border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -71,7 +86,7 @@ export default function TransactionsList() {
             <option value="income">Income</option>
             <option value="expense">Expense</option>
           </select>
-          <button 
+          <button
             onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
             className="p-2 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center shrink-0"
             title="Sort by date"
@@ -99,7 +114,7 @@ export default function TransactionsList() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {filteredAndSortedData.map((t) => (
+              {paginatedData.map((t) => (
                 <tr key={t.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                   <td className="py-4 text-zinc-900 dark:text-zinc-300">
                     {new Date(t.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -116,8 +131,8 @@ export default function TransactionsList() {
                   <td className="py-4">
                     <span className={cn(
                       "px-2 py-1 text-xs font-medium rounded-full",
-                      t.type === 'income' ? "text-emerald-700 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-500/10" 
-                      : "text-red-700 bg-red-50 dark:text-red-400 dark:bg-red-500/10"
+                      t.type === 'income' ? "text-emerald-700 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-500/10"
+                        : "text-red-700 bg-red-50 dark:text-red-400 dark:bg-red-500/10"
                     )}>
                       {t.type.charAt(0).toUpperCase() + t.type.slice(1)}
                     </span>
@@ -130,7 +145,7 @@ export default function TransactionsList() {
                   </td>
                   {user?.role === 'admin' && (
                     <td className="py-4 text-right">
-                      <button 
+                      <button
                         onClick={() => deleteTransaction(t.id)}
                         className="p-1.5 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                         title="Delete Transaction"
@@ -145,6 +160,46 @@ export default function TransactionsList() {
           </table>
         )}
       </div>
+
+      {filteredAndSortedData.length > 0 && totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-zinc-200 dark:border-zinc-800 pt-4 mt-4 gap-4">
+          <span className="text-sm text-zinc-500 dark:text-zinc-400">
+            Showing {((safeCurrentPage - 1) * itemsPerPage) + 1} to {Math.min(safeCurrentPage * itemsPerPage, filteredAndSortedData.length)} of {filteredAndSortedData.length} entries
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={safeCurrentPage === 1}
+              className="px-3 py-1.5 text-sm font-medium border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-600 dark:text-zinc-300 transition-colors"
+            >
+              Previous
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={cn(
+                    "w-8 h-8 flex items-center justify-center text-sm font-medium rounded-lg transition-colors",
+                    safeCurrentPage === i + 1
+                      ? "bg-indigo-600 text-white"
+                      : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  )}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={safeCurrentPage === totalPages}
+              className="px-3 py-1.5 text-sm font-medium border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-600 dark:text-zinc-300 transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
