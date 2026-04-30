@@ -57,7 +57,7 @@ export default function DashboardLayout() {
             <div className="p-2 bg-indigo-600 rounded-lg">
               <Wallet size={24} className="text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight">Zorvyn</span>
+            <span className="text-xl font-bold tracking-tight">AlphaX</span>
           </div>
 
           <nav className="flex-1 px-4 py-6 space-y-2">
@@ -105,7 +105,7 @@ export default function DashboardLayout() {
             >
               <Menu size={24} />
             </button>
-            <h2 className="text-lg font-semibold lg:hidden">Zorvyn</h2>
+            <h2 className="text-lg font-semibold lg:hidden"></h2>
           </div>
 
           <div className="flex items-center gap-4">

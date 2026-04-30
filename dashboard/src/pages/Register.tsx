@@ -41,7 +41,7 @@ export default function Register() {
           >
             <Wallet size={120} className="text-indigo-400 opacity-80" />
           </motion.div>
-          <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">Join Zorvyn Finance</h1>
+          <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">Join AlphaX Finance</h1>
           <p className="text-zinc-400 text-lg max-w-md">
             Create an account to track, analyze, and optimize your spending with stunning visualizations.
           </p>
@@ -84,7 +84,7 @@ export default function Register() {
             <div className="p-2 bg-indigo-600 rounded-lg">
               <Wallet size={32} className="text-white" />
             </div>
-            <h1 className="text-3xl font-bold">Zorvyn</h1>
+            <h1 className="text-3xl font-bold"></h1>
           </div>
 
           <h2 className="text-3xl font-semibold mb-2">Create Account</h2>

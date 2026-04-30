@@ -85,7 +85,7 @@ export default function Login() {
             <div className="p-2 bg-indigo-600 rounded-lg">
               <Wallet size={32} className="text-white" />
             </div>
-            <h1 className="text-3xl font-bold">Zorvyn</h1>
+            <h1 className="text-3xl font-bold">AlphaX</h1>
           </div>
 
           <h2 className="text-3xl font-semibold mb-2">Welcome Back</h2>
