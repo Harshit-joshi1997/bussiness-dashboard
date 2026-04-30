@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Receipt, Settings, LogOut, Sun, Moon, Menu, Wallet, Users } from 'lucide-react';
+import { LayoutDashboard, Receipt, Settings, LogOut, Sun, Moon, Menu, Wallet, Users, Bot } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { useThemeStore } from '../../store/themeStore';
 import { cn } from '../../utils/cn';
@@ -28,6 +28,7 @@ export default function DashboardLayout() {
   const navLinks = [
     { name: 'Overview', to: '/dashboard', icon: LayoutDashboard },
     { name: 'Transactions', to: '/dashboard/transactions', icon: Receipt },
+    { name: 'AI Assistant', to: '/dashboard/ai', icon: Bot },
   ];
 
   if (user?.role === 'admin') {
@@ -60,7 +61,7 @@ export default function DashboardLayout() {
             <span className="text-xl font-bold tracking-tight">AlphaX</span>
           </div>
 
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700">
             {navLinks.map((link) => (
               <NavLink
                 key={link.name}
@@ -82,7 +83,7 @@ export default function DashboardLayout() {
             ))}
           </nav>
 
-          <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
+          <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
             <button
               onClick={handleLogout}
               className="flex items-center gap-3 w-full px-3 py-2 text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors font-medium"
