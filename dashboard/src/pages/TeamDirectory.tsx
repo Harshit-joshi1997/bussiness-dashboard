@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { Shield, Trash2, Edit2, Plus, X } from 'lucide-react';
+import { cn } from '../utils/cn';
 import type { User } from '../store/useStore';
 
 export default function TeamDirectory() {
@@ -13,7 +14,7 @@ export default function TeamDirectory() {
   const updateEmployee = useStore((state) => state.updateEmployee);
 
   const [errorText, setErrorText] = useState('');
-  
+
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -21,6 +22,24 @@ export default function TeamDirectory() {
 
   // Form states
   const [formData, setFormData] = useState<Partial<User>>({});
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Reset to first page when the number of employees changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [employees.length]);
+
+  const totalPages = Math.max(1, Math.ceil(employees.length / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedEmployees = useMemo(() => {
+    return employees.slice(
+      (safeCurrentPage - 1) * itemsPerPage,
+      safeCurrentPage * itemsPerPage
+    );
+  }, [employees, safeCurrentPage, itemsPerPage]);
 
   if (user?.role !== 'admin') {
     return (
@@ -74,7 +93,7 @@ export default function TeamDirectory() {
       setTimeout(() => setErrorText(''), 3000);
       return;
     }
-    
+
     addEmployee(formData as User);
     setIsAddModalOpen(false);
   };
@@ -121,7 +140,7 @@ export default function TeamDirectory() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {employees.map((emp) => (
+              {paginatedEmployees.map((emp) => (
                 <tr key={emp.email} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                   <td className="py-4 text-zinc-900 dark:text-zinc-300">
                     <div className="flex items-center gap-3">
@@ -145,27 +164,27 @@ export default function TeamDirectory() {
                   </td>
                   <td className="py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                       <button
-                         onClick={() => handleRoleChange(emp.email, emp.role)}
-                         className="p-2 text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                         title="Change Role"
-                       >
-                         <Shield size={18} />
-                       </button>
-                       <button
-                         onClick={() => openEditModal(emp)}
-                         className="p-2 text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                         title="Edit Employee"
-                       >
-                         <Edit2 size={18} />
-                       </button>
-                       <button
-                         onClick={() => handleDelete(emp.email)}
-                         className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                         title="Remove Employee"
-                       >
-                         <Trash2 size={18} />
-                       </button>
+                      <button
+                        onClick={() => handleRoleChange(emp.email, emp.role)}
+                        className="p-2 text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        title="Change Role"
+                      >
+                        <Shield size={18} />
+                      </button>
+                      <button
+                        onClick={() => openEditModal(emp)}
+                        className="p-2 text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        title="Edit Employee"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(emp.email)}
+                        className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                        title="Remove Employee"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -173,6 +192,46 @@ export default function TeamDirectory() {
             </tbody>
           </table>
         </div>
+
+        {employees.length > 0 && totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between border-t border-zinc-200 dark:border-zinc-800 pt-4 mt-4 gap-4">
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">
+              Showing {((safeCurrentPage - 1) * itemsPerPage) + 1} to {Math.min(safeCurrentPage * itemsPerPage, employees.length)} of {employees.length} entries
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={safeCurrentPage === 1}
+                className="px-3 py-1.5 text-sm font-medium border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-600 dark:text-zinc-300 transition-colors"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={cn(
+                      "w-8 h-8 flex items-center justify-center text-sm font-medium rounded-lg transition-colors",
+                      safeCurrentPage === i + 1
+                        ? "bg-indigo-600 text-white"
+                        : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                    )}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={safeCurrentPage === totalPages}
+                className="px-3 py-1.5 text-sm font-medium border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-600 dark:text-zinc-300 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modals */}
@@ -183,7 +242,7 @@ export default function TeamDirectory() {
               <h3 className="text-xl font-bold dark:text-white">
                 {isAddModalOpen ? 'Add New Employee' : 'Edit Employee'}
               </h3>
-              <button 
+              <button
                 onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }}
                 className="p-1 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
               >
@@ -202,7 +261,7 @@ export default function TeamDirectory() {
                   className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-transparent dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1 dark:text-zinc-300">Email</label>
                 <input
