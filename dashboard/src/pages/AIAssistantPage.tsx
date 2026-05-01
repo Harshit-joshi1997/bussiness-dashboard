@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bot, Send, User } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { useStore } from '../store/useStore';
 
 interface Message {
   id: string;
@@ -16,6 +17,11 @@ export default function AIAssistantPage() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Connect to global state to send real context to AI
+  const transactions = useStore(state => state.transactions);
+  const getSummary = useStore(state => state.getSummary);
+  const user = useStore(state => state.user);
+
   // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -25,7 +31,7 @@ export default function AIAssistantPage() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -34,15 +40,43 @@ export default function AIAssistantPage() {
     setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:5000/api/ai-agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: userMsg.content,
+          dashboardData: {
+            user: { name: user?.name, role: user?.role },
+            financialSummary: getSummary(user?.role === 'staff' ? user.email : undefined),
+            recentTransactions: transactions.slice(0, 30) // Only send recent 30 to save context limits
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'ai',
-        content: `I've received your question: "${userMsg.content}". I am currently a mockup, but I will be connected to the backend soon!`
+        content: data.aiResponse
       };
       setMessages(prev => [...prev, aiMsg]);
+    } catch (error) {
+      console.error('Error fetching AI response:', error);
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'ai',
+        content: 'Sorry, I am having trouble connecting to the server. Please ensure your backend is running and OPENAI_API_KEY is set in your .env file.'
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (
